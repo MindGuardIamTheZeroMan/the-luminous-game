@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Luminous Game — Meraz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --ink:#0D0E12;--ink2:#2A2E3A;--paper:#F5F2EC;--warm:#FAF7F2;
+  --gold:#8B6200;--gold-l:#C8960A;--gold-pale:#FBF3DC;
+  --green:#1A4A2E;--green-l:#2E7A4E;--green-pale:#EAF4EE;
+  --red:#5A1020;--red-pale:#FBE8EC;
+  --blue:#0E2A4A;--blue-pale:#E8EEF6;
+  --grey:#7A8090;--lgrey:#B0B8C8;
+  --border:#D8D0C0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:16px;}
+body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-weight:300;line-height:1.7;}
+
+/* PROGRESS */
+.prog{position:fixed;top:0;left:0;right:0;height:2px;background:rgba(0,0,0,.06);z-index:100;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--green-l));width:0%;transition:width .2s;}
+
+/* SOUND PANEL */
+.snd-panel{position:fixed;bottom:28px;right:28px;z-index:200;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.snd-btn{background:var(--ink);color:var(--gold-pale);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;border:none;border-radius:4px;padding:10px 16px;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:8px;}
+.snd-btn:hover{background:var(--ink2);}
+.snd-btn.on{background:var(--green);color:#fff;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--gold-l);}
+.snd-btn.on .sdot{background:#7EE8A2;animation:sdpulse 2s ease-in-out infinite;}
+@keyframes sdpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.6);opacity:.6;}}
+.fp{background:var(--warm);border:1px solid var(--border);border-radius:6px;padding:12px;display:none;flex-direction:column;gap:4px;min-width:220px;}
+.fp.vis{display:flex;}
+.fp-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;text-align:center;}
+.fopt{background:none;border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-family:'Space Serif 4',serif;font-size:13px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;color:var(--ink2);transition:all .15s;}
+.fopt:hover,.fopt.sel{background:var(--gold-pale);border-color:var(--gold);color:var(--ink);}
+.fhz{font-family:'Space Mono',monospace;font-size:10px;color:var(--grey);}
+.fd{font-family:'Space Mono',monospace;font-size:10px;color:var(--grey);text-align:right;display:none;}
+.fd.vis{display:block;}
+.fd span{color:var(--gold);}
+
+/* BREATH */
+.br{position:fixed;bottom:28px;left:28px;width:52px;height:52px;z-index:200;display:none;}
+.br.vis{display:block;}
+.br svg{width:100%;height:100%;}
+.bci{fill:none;stroke:var(--green-l);stroke-width:1.5;stroke-dasharray:130;stroke-dashoffset:130;animation:bra 8s ease-in-out infinite;opacity:.7;}
+.bcf{fill:rgba(46,122,78,.05);animation:brf 8s ease-in-out infinite;}
+@keyframes bra{0%{stroke-dashoffset:130;}45%,50%{stroke-dashoffset:0;}95%,100%{stroke-dashoffset:130;}}
+@keyframes brf{0%,95%,100%{opacity:.05;}45%,50%{opacity:.18;}}
+.bt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Space Mono',monospace;font-size:7px;font-weight:700;color:var(--green);letter-spacing:.5px;text-align:center;pointer-events:none;}
+
+/* LAYOUT */
+.wrap{max-width:820px;margin:0 auto;padding:0 24px 120px;}
+
+/* HERO */
+.hero{padding:80px 0 64px;border-bottom:1px solid var(--border);}
+.hero-tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--grey);margin-bottom:24px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,64px);font-weight:800;color:var(--ink);line-height:1.1;margin-bottom:16px;letter-spacing:-1px;}
+.hero .sub{font-size:20px;color:var(--ink2);font-weight:300;font-style:italic;margin-bottom:12px;}
+.hero .coda{font-family:'Space Mono',monospace;font-size:12px;color:var(--grey);letter-spacing:1px;}
+.hero .sound-hint{margin-top:32px;display:inline-block;font-family:'Space Mono',monospace;font-size:11px;color:var(--green-l);letter-spacing:2px;border-bottom:1px solid var(--green-l);padding-bottom:2px;cursor:pointer;}
+
+/* SCIENTIFIC NOTE */
+.sci-note{background:var(--blue-pale);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:20px 24px;margin:48px 0 32px;font-size:15px;}
+.sci-note strong{color:var(--blue);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;display:block;margin-bottom:8px;text-transform:uppercase;}
+
+/* SECTION HEAD */
+.sect-head{margin:64px 0 32px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.sect-head h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.sect-head p{font-size:15px;color:var(--grey);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;}
+
+/* INTRO */
+.intro{padding:40px 0;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.intro p{font-size:18px;line-height:1.8;color:var(--ink2);margin-bottom:20px;}
+.intro blockquote{border-left:2px solid var(--gold);padding:0 0 0 20px;margin:24px 0;font-style:italic;color:var(--gold);font-size:17px;}
+
+/* HOW TO PLAY */
+.htp{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:32px 0 48px;}
+.htp-step{padding:20px 16px;background:var(--warm);border:1px solid var(--border);border-radius:6px;}
+.htp-n{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--green-l);margin-bottom:8px;}
+.htp-step p{font-size:14px;color:var(--ink2);line-height:1.6;}
+
+/* CARDS */
+.cards{display:flex;flex-direction:column;gap:2px;margin-bottom:64px;}
+.card{border:1px solid var(--border);border-radius:0;background:var(--warm);overflow:hidden;transition:border-color .2s;cursor:pointer;}
+.card:first-child{border-radius:8px 8px 0 0;}
+.card:last-child{border-radius:0 0 8px 8px;}
+.card:hover{border-color:var(--gold);}
+.card.open{border-color:var(--gold);background:var(--paper);}
+
+.c-head{display:flex;align-items:center;gap:16px;padding:18px 22px;}
+.c-icon{font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;}
+.c-meta{flex:1;}
+.c-num{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--lgrey);margin-bottom:2px;}
+.c-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--ink);}
+.c-sub{font-size:13px;color:var(--grey);font-style:italic;}
+.c-arr{font-size:14px;color:var(--grey);transition:transform .3s;flex-shrink:0;}
+.card.open .c-arr{transform:rotate(180deg);color:var(--gold);}
+
+.c-body{max-height:0;overflow:hidden;transition:max-height .45s ease;}
+.card.open .c-body{max-height:1400px;}
+
+.c-inner{padding:0 22px 24px;display:grid;gap:12px;}
+.panel{border-radius:4px;padding:16px 18px;}
+.p-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.pdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.panel p{font-size:15px;line-height:1.75;}
+
+.p-trap{background:var(--red-pale);border:1px solid rgba(90,16,32,.15);}
+.p-trap .p-lbl{color:var(--red);}
+.p-trap .pdot{background:var(--red);}
+.p-trap p{color:#5A2030;}
+
+.p-truth{background:var(--green-pale);border:1px solid rgba(26,74,46,.15);}
+.p-truth .p-lbl{color:var(--green);}
+.p-truth .pdot{background:var(--green-l);}
+.p-truth p{color:#1A3A24;}
+
+.p-sci{background:var(--blue-pale);border:1px solid rgba(14,42,74,.12);}
+.p-sci .p-lbl{color:var(--blue);}
+.p-sci .pdot{background:var(--blue);}
+.p-sci p{font-family:'Space Mono',monospace;font-size:12px;color:#1A2E4A;line-height:1.7;}
+
+.p-game{background:var(--gold-pale);border:1px solid rgba(139,98,0,.2);}
+.p-game .p-lbl{color:var(--gold);}
+.p-game .pdot{background:var(--gold-l);}
+.p-game p{color:#3A2800;}
+
+.c-q{padding:18px 20px;background:var(--warm);border:1px solid var(--gold);border-radius:4px;text-align:center;}
+.c-q .ql{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.c-q p{font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--ink);line-height:1.6;}
+
+/* PRACTICE BLOCK */
+.practice{background:var(--ink);color:var(--paper);border-radius:8px;padding:48px;margin:0 0 64px;text-align:center;}
+.practice h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:800;margin-bottom:8px;color:var(--gold-pale);}
+.practice .psub{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--grey);margin-bottom:40px;}
+.psteps{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:40px;}
+.pstep{flex:1;min-width:150px;max-width:200px;padding:16px;position:relative;}
+.pstep::after{content:'→';position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--grey);font-size:18px;}
+.pstep:last-child::after{display:none;}
+.pnum{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--gold-l);margin-bottom:8px;}
+.pstep h4{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--paper);margin-bottom:6px;}
+.pstep p{font-size:13px;color:var(--grey);line-height:1.5;}
+.mantra{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--gold-pale);border-top:1px solid rgba(255,255,255,.1);padding-top:32px;}
+
+/* FINAL */
+.final{padding:64px 0;text-align:center;border-top:1px solid var(--border);}
+.final h2{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--ink);margin-bottom:24px;}
+.final p{max-width:560px;margin:0 auto 18px;font-size:17px;color:var(--ink2);line-height:1.8;}
+.final blockquote{max-width:480px;margin:40px auto 0;font-style:italic;font-size:17px;color:var(--ink2);border:1px solid var(--border);border-radius:6px;padding:28px 32px;line-height:1.75;text-align:left;}
+.final blockquote small{display:block;margin-top:12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--grey);font-style:normal;text-transform:uppercase;}
+
+/* FOOTER */
+.foot{text-align:center;padding:48px 0 32px;border-top:1px solid var(--border);}
+.foot .fname{font-family:'Playfair Display',serif;font-size:22px;font-weight:800;color:var(--ink);letter-spacing:6px;margin-bottom:6px;}
+.foot .fsub{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;}
+.foot .ffree{font-style:italic;font-size:15px;color:var(--green-l);margin-top:12px;}
+.foot .flone{font-style:italic;font-size:14px;color:var(--lgrey);margin-top:4px;}
+
+@media(max-width:580px){.htp{grid-template-columns:1fr 1fr;}.psteps{flex-direction:column;align-items:center;}.pstep::after{display:none;}.pstep{max-width:100%;}.snd-panel{bottom:16px;right:16px;}.br{bottom:16px;left:16px;}}
+</style>
+</head>
+<body>
+<div class="prog"><div class="prog-bar" id="pb"></div></div>
+
+<div class="br" id="br">
+  <svg viewBox="0 0 52 52">
+    <circle class="bcf" cx="26" cy="26" r="23"/>
+    <circle class="bci" cx="26" cy="26" r="21" style="transform:rotate(-90deg) translate(-52px,0)"/>
+  </svg>
+  <div class="bt" id="bt">IN</div>
+</div>
+
+<div class="snd-panel">
+  <div class="fp" id="fp">
+    <div class="fp-title">Ambient Tone</div>
+    <button class="fopt sel" onclick="sel(this,136.1,'Earth Resonance 136 Hz')"><span>Earth Resonance</span><span class="fhz">136 Hz</span></button>
+    <button class="fopt" onclick="sel(this,432,'Natural Tuning 432 Hz')"><span>Natural Tuning</span><span class="fhz">432 Hz</span></button>
+    <button class="fopt" onclick="sel(this,528,'Solfeggio Mi 528 Hz')"><span>Solfeggio Mi</span><span class="fhz">528 Hz</span></button>
+    <button class="fopt" onclick="sel(this,40,'Gamma Entrainment 40 Hz')"><span>Gamma (focus)</span><span class="fhz">40 Hz</span></button>
+    <button class="fopt" onclick="sel(this,10,'Alpha Entrainment 10 Hz')"><span>Alpha (calm)</span><span class="fhz">mod 10 Hz</span></button>
+  </div>
+  <div class="fd" id="fd">Playing: <span id="fl">Earth Resonance 136 Hz</span></div>
+  <button class="snd-btn" id="sb" onclick="tog()"><span class="sdot"></span><span id="sl">Sound</span></button>
+</div>
+
+<div class="wrap">
+
+<div class="hero">
+  <p class="hero-tag">The Candlelight Volumes · Vol. I</p>
+  <h1>The Luminous<br>Game</h1>
+  <p class="sub">Recognise the pattern. Trace it to its root. Give yourself what you actually need.</p>
+  <p class="coda">Based on applied psychology, game theory, and decision science · by Meraz</p>
+  <span class="sound-hint" onclick="tog()">▶ Begin with sound</span>
+</div>
+
+<div class="sci-note">
+  <strong>What this is — and what it isn't</strong>
+  The 12 patterns in this guide are drawn from cognitive behavioral research, attachment theory, evolutionary game theory, and Frankfurt's philosophy of will. The cosmological framing (Gnostic, mystical) used in the longer Meraz volumes is <em>metaphor</em> — useful for imagination, not empirical claim. The practical interventions here are evidence-based. The spiritual interpretation is yours to accept or leave.
+</div>
+
+<div class="intro">
+  <p>You are not broken. You are rational — under wrong assumptions. Every compulsive pattern you run is the mathematically correct response to a false belief about the world. The anger that defends your status. The accumulation that promises safety. The thinking that substitutes for presence. Each one is logical, given false premises.</p>
+  <blockquote>"The problem is never the desire. The problem is the false belief about what will satisfy it."</blockquote>
+  <p>This guide identifies 12 recurring false beliefs, the distorted desire patterns they generate, the real underlying need being approximated, and the simplest possible direct path to meeting that need — without the distorted strategy.</p>
+</div>
+
+<div class="htp">
+  <div class="htp-step"><div class="htp-n">01</div><p>Open the mirror that feels most alive in you right now</p></div>
+  <div class="htp-step"><div class="htp-n">02</div><p>Read the trap without judgment — recognize it as rational under a false premise</p></div>
+  <div class="htp-step"><div class="htp-n">03</div><p>Find the real need underneath. That need is legitimate.</p></div>
+  <div class="htp-step"><div class="htp-n">04</div><p>Use the question daily. One question per mirror. One mirror at a time.</p></div>
+</div>
+
+<div class="sect-head">
+  <h2>The Twelve Mirrors</h2>
+  <p>Each one is a rational response to a false belief</p>
+</div>
+
+<div class="cards" id="cg"></div>
+
+<div class="practice">
+  <h2>The Universal Intervention</h2>
+  <p class="psub">Pause · Trace · Redirect — applied to any desire, any moment</p>
+  <div class="psteps">
+    <div class="pstep"><div class="pnum">P</div><h4>Pause</h4><p>One full breath before acting on any strong desire. Activates second-order awareness.</p></div>
+    <div class="pstep"><div class="pnum">T</div><h4>Trace</h4><p>Ask: what genuine need is this desire approximating? Name it precisely.</p></div>
+    <div class="pstep"><div class="pnum">R</div><h4>Redirect</h4><p>Meet the genuine need directly — without the distorted strategy.</p></div>
+  </div>
+  <div class="mantra">"The desire is not the enemy. The false premise is."</div>
+</div>
+
+<div class="final">
+  <h2>The One Claim That Cannot Be Reduced</h2>
+  <p>Game theory proves non-possessive love is evolutionarily stable under long-horizon conditions. Neuroscience shows it correlates with better outcomes across every measured dimension. Decision theory shows it is optimal for any agent with accurate priors and sufficient time-horizon.</p>
+  <p>What formal science cannot prove — and honestly acknowledges it cannot prove — is whether love is merely the optimal strategy, or whether it is also the fundamental structure of reality. That question is the genuine frontier. The practice is the same either way. But the answer matters.</p>
+  <blockquote>
+    "If those who lead you say the Kingdom is in the sky, the birds will get there first. Rather, the Kingdom is inside you, and outside you. When you know yourself, you will be known."
+    <small>— Codex Thomae, Logion III</small>
+  </blockquote>
+</div>
+
+<div class="foot">
+  <div class="fname">MERAZ</div>
+  <div class="fsub">The Candlelight Volumes · Volume I</div>
+  <div class="ffree">Free to all. Free always. No visible but all accessible.</div>
+  <div class="flone">Lonely but not lonely.</div>
+</div>
+
+</div>
+
+<script>
+const CD=[
+{ico:"🔥",bg:"#FFF0EE",ibg:"rgba(180,60,40,.12)",n:"Mirror I — Force",nm:"The Dominance Pattern",s:"The false premise: power is finite and must be seized",
+tr:"You fight to prove yourself. You need to win. You measure respect in status. Anger arrives fast when you feel threatened. The pattern is rational: if power is scarce and others will take yours, constant defense and assertion is the correct response.",
+tu:"The real need is security — the unassailable kind that doesn't depend on external outcomes. That security exists, but it isn't found by winning more. It's found by recognizing that your value is not contingent on anyone's confirmation.",
+sci:"Game theory (Axelrod 1984): Aggressive dominance strategies are ESS only in short-horizon, low-reputation games. In iterated games with memory, cooperative strategies dominate. The aggression pattern is trapping you in a short-horizon frame.",
+gm:"Next time you feel the drive to win an argument or assert status: pause. Ask what specific threat you are actually defending against. Name it precisely. Then ask if the thing you're protecting is actually at risk. Usually it isn't.",
+q:"What specifically am I afraid of losing — and is it actually at risk right now?"},
+{ico:"🌿",bg:"#F8F4EE",ibg:"rgba(120,90,30,.12)",n:"Mirror II — Accumulation",nm:"The Possession Pattern",s:"The false premise: security can be stored in objects",
+tr:"You accumulate — money, beauty, possessions, comfort. The logic is sound: if safety is a function of resources held, maximum accumulation is the rational strategy. The problem is the model is wrong. Safety is a state, not a stockpile.",
+tu:"The real need is genuine security — which is a relationship with your own stability, not an inventory of assets. Enough is a perception before it is a quantity. The evidence: hedonic adaptation means each accumulation provides diminishing returns to felt security.",
+sci:"Hedonic adaptation (Brickman & Campbell 1971; Kahneman 2006): utility from possessions reverts to baseline after 3-6 months. The security model that drives accumulation is empirically false as a long-run strategy. Diminishing marginal utility applies to every material good.",
+gm:"For one week: when you feel the pull to acquire something, wait 72 hours before acting. During that window, identify the feeling the acquisition is meant to produce (safety, pleasure, status). Then find one free or already-available route to that feeling.",
+q:"What feeling am I trying to produce with this acquisition — and can I produce it directly?"},
+{ico:"🌀",bg:"#EEF4F8",ibg:"rgba(14,42,74,.10)",n:"Mirror III — Compulsion",nm:"The Overthinking Pattern",s:"The false premise: sufficient analysis eliminates uncertainty",
+tr:"Your mind doesn't stop. You analyze everything — especially social interactions, risks, outcomes. The implicit belief: if you think long enough, you will reach certainty before acting. This is false. Most important decisions are made under irreducible uncertainty. More analysis past a threshold is not information gain — it is anxiety management.",
+tu:"The real need is genuine understanding — the kind that comes from direct engagement with reality, not from modeling it at a distance. Presence is more informative than analysis for most interpersonal and personal decisions.",
+sci:"Information overload (Tversky & Kahneman): additional information past a threshold increases confidence without increasing accuracy. Analysis-paralysis is empirically documented. The optimal stopping rule (optimal threshold) is typically hit much earlier than anxious analyzers believe.",
+gm:"Once a day: sit with one unresolved question for 2 minutes without actively reasoning about it. Notice what arises in the gap. This is not mysticism — it is allowing pattern-recognition systems (fast thinking, System 1) to process without verbal interference.",
+q:"Have I already gathered enough information to act — and is more thinking actually producing new information or just managing anxiety?"},
+{ico:"🌙",bg:"#EEF0F6",ibg:"rgba(40,50,100,.10)",n:"Mirror IV — Attachment",nm:"The Belonging Pattern",s:"The false premise: safety requires merger with the group",
+tr:"Fear of aloneness drives you to maintain relationships past their useful life, to over-function for others, to suppress your own needs for the sake of group harmony. Attachment theory (Bowlby) explains this exactly: early insecure attachment generates hypervigilant monitoring of relational signals. Rational given the early environment. Outdated given the current one.",
+tu:"The real need is secure base — the internal stability that allows you to be alone without anxiety and with others without enmeshment. Secure attachment style (Ainsworth) is associated with exactly this: comfort both with proximity and distance.",
+sci:"Attachment theory (Bowlby 1969, Ainsworth 1978): anxious attachment style generates hyperactivation of the attachment system — constant monitoring for abandonment cues, compulsive proximity-seeking. This is a calibration error from early data, not an accurate model of current relationships.",
+gm:"Spend 10 minutes genuinely alone today — no device, no task. Not to meditate. Just to notice that you are present and intact without external confirmation. Repeat daily. The anxiety decreases as the false model is updated with accurate data.",
+q:"Am I in this relationship because it genuinely serves me — or because leaving it would require sitting with myself?"},
+{ico:"☀️",bg:"#FBF8EE",ibg:"rgba(160,120,0,.10)",n:"Mirror V — Performance",nm:"The Recognition Pattern",s:"The false premise: external validation constitutes self-knowledge",
+tr:"You perform rather than be. You track how you are perceived. You feel slightly devastated when overlooked. The implicit model: your value is a function of others' perception of it. This is testably false — external recognition has near-zero correlation with internal coherence or life satisfaction in longitudinal studies.",
+tu:"The real need is genuine self-knowledge — knowing what you actually value, who you actually are, what you are actually capable of. That knowledge is only accessible from the inside. External validation can confirm it but cannot constitute it.",
+sci:"Self-determination theory (Deci & Ryan): external regulation (performing for external reward) consistently underperforms internal regulation (acting from genuine values) on measures of wellbeing, persistence, and creative output. The recognition-seeking strategy is empirically inferior.",
+gm:"Today: do one thing of genuine quality that no one will see. Not for discipline — to notice the difference in how it feels to act from internal standard vs. external audience. That felt difference is the signal you've been misattributing to recognition.",
+q:"If no one would ever know I did this — would I still do it?"},
+{ico:"🔬",bg:"#EEF6EE",ibg:"rgba(26,74,46,.10)",n:"Mirror VI — Perfectionism",nm:"The Control Pattern",s:"The false premise: perfect preparation eliminates vulnerability",
+tr:"You improve forever. You never quite start, never quite finish, never quite publish. The logic: if the work is imperfect, it can be criticized; if it is never done, it cannot fail. This is rational anxiety management — the preparation loop provides the feeling of progress without the risk of judgment.",
+tu:"The real need is confidence — not the confidence that comes from perfect work, but the confidence that comes from tolerating the normal vulnerability of real action. That tolerance is built by doing, not by preparing.",
+sci:"Terror Management Theory (Becker 1973; Solomon et al): perfectionism functions as a symbolic buffer against the anxiety of fallibility and mortality — if I make no mistakes, I am safe from judgment. This is empirically documented and treatable with exposure-based approaches.",
+gm:"Publish, send, or submit one imperfect thing this week. Set a specific quality threshold (75% of ideal) and stop when you reach it. Track whether the catastrophic outcome you feared actually materialized. Repeat. The model updates with data.",
+q:"What is the specific bad outcome I am preventing by not finishing — and what is the probability it would actually occur?"},
+{ico:"⚖️",bg:"#F4EEF8",ibg:"rgba(60,24,112,.10)",n:"Mirror VII — Appeasement",nm:"The False Peace Pattern",s:"The false premise: harmony requires suppressing truth",
+tr:"You say yes when you mean no. You withhold difficult truths to maintain surface calm. You absorb conflict that isn't yours. The logic: disruption costs more than suppression. This miscalculates both the cost of suppression (resentment, inauthenticity, gradual relationship erosion) and the benefit of honest engagement.",
+tu:"The real need is genuine connection — which is only possible between two people who are actually present, not performing. The suppression strategy achieves the appearance of peace while preventing the reality of it.",
+sci:"Gottman (1994): stonewalling, contempt, and defensiveness — all driven by conflict avoidance — are the four strongest predictors of relationship dissolution. Honest conflict (handled without contempt) is positively correlated with long-term relationship quality.",
+gm:"Name one thing you have been not saying to someone you care about. Draft it in writing first. Identify the form that conveys the truth without contempt or weaponization. Say it. Track the outcome against your predicted outcome.",
+q:"What am I not saying — and what belief about the outcome is preventing me from saying it?"},
+{ico:"🌊",bg:"#F8EEF0",ibg:"rgba(90,16,32,.10)",n:"Mirror VIII — Intensity",nm:"The Depth Substitution Pattern",s:"The false premise: intensity equals depth",
+tr:"You are drawn to dramatic, painful, or dark experiences. Calm feels shallow. You are suspicious of peace. The implicit belief: real depth requires suffering; contentment is numbness; painful relationships are more alive than stable ones. This confuses arousal (intensity) with meaning (depth).",
+tu:"The real need is genuine transformation — change that restructures how you engage with the world, not change that temporarily elevates emotional arousal. Genuine transformation is often quiet. It is not recognized by its intensity but by its permanence.",
+sci:"Arousal-misattribution (Dutton & Aron 1974): humans systematically misattribute physiological arousal (fear, pain, excitement) as emotional significance. High-arousal experiences feel more meaningful than they are. This is a measurement error in the meaning-detection system.",
+gm:"Identify one stable, low-drama situation in your life that you have been undervaluing because it lacks intensity. Bring full attention to it for one week. Track whether depth is actually absent or whether you have been mis-measuring it.",
+q:"Am I mistaking arousal for meaning — and what would genuine depth feel like if it were quiet?"},
+{ico:"🧭",bg:"#EEF4F0",ibg:"rgba(14,64,42,.10)",n:"Mirror IX — Perpetual Seeking",nm:"The Horizon Pattern",s:"The false premise: the answer is in the next experience",
+tr:"You are always moving toward the next thing. New teachings, new cities, new systems, new relationships. The implicit model: the right answer has not yet been encountered; when found, it will solve the core problem. This is false. The core problem is not an information deficit.",
+tu:"The real need is arrival — full presence in the life you are already living, with the knowledge you already have. The seeking pattern converts presence into perpetual future-orientation, which is structurally incapable of being satisfied by any arrival.",
+sci:"Present-moment focus (Killingsworth & Gilbert 2010): mind-wandering — including future-planning and goal-seeking — is associated with lower happiness independent of the content of the thought. The seeking state itself is the problem, not the absence of the right destination.",
+gm:"Choose one domain (spiritual practice, relationship, skill, place) and stay with it for 30 days without adding anything new. Not as a test of discipline — as a direct experiment in whether depth is available when you stop seeking breadth.",
+q:"Is the next thing actually more likely to contain what I need — or am I practicing the skill of not arriving?"},
+{ico:"🏛️",bg:"#F4F2EE",ibg:"rgba(60,50,30,.10)",n:"Mirror X — Compliance",nm:"The External Law Pattern",s:"The false premise: worth must be earned through compliance",
+tr:"You live under a persistent, background sense of insufficiency. There is always more that should be done, better that could be achieved, guilt about the gap. The implicit law is external — the standard was set by an authority outside you and you have internalized it as your own conscience. It is not your conscience. It is borrowed.",
+tu:"The real need is genuine integrity — alignment between your values and your actions. That alignment cannot be achieved by compliance with external standards, because external standards are calibrated for someone else. It requires the prior step of identifying your own values.",
+sci:"Self-Determination Theory (Deci & Ryan): introjected regulation (doing things to avoid guilt/shame) produces worse outcomes on every measure than identified regulation (doing things because they align with personal values). The compliance pattern actively prevents the integration it seeks.",
+gm:"Take one obligation you currently carry. Write: (1) whose standard this obligation serves, (2) whether you actually endorse that standard, (3) what you would do differently if only your own values applied. The gap between 1 and 3 is the borrowed law.",
+q:"Is this standard mine — or did I inherit it from someone whose approval I needed?"},
+{ico:"⚡",bg:"#EEF6F8",ibg:"rgba(10,50,80,.10)",n:"Mirror XI — Identity",nm:"The Awakening Performance Pattern",s:"The false premise: spiritual insight is a status",
+tr:"You have genuine perceptions that others haven't yet reached. But you have made those perceptions into an identity — you are the awake one, the aware one, the one who sees what others miss. This converts genuine insight into social currency, which immediately corrupts the insight.",
+tu:"The real need is genuine integration — the application of insight to actual behavior in ordinary circumstances. Insight without behavioral change is intellectually interesting and practically inert.",
+sci:"Dunning-Kruger applied to metacognition: early-stage competence in self-awareness produces overconfidence in self-knowledge. Genuine expertise in metacognition (advanced practitioners) is consistently associated with increased epistemic humility, not decreased.",
+gm:"Today: apply your most sophisticated spiritual or psychological understanding to your most mundane, unglamorous circumstance — the household task, the difficult conversation, the boring obligation. If the understanding doesn't change your behavior in that context, it hasn't been integrated yet.",
+q:"Does my understanding show up in my ordinary behavior — or only in my conversations about understanding?"},
+{ico:"🫧",bg:"#EEF0F6",ibg:"rgba(30,40,80,.10)",n:"Mirror XII — Dissolution",nm:"The Merger Pattern",s:"The false premise: relief requires loss of self",
+tr:"You want to disappear into something larger — substances, romantic merger, collective experiences, sleep, screens. The relief you seek is real: the ordinary bounded self is genuinely exhausting to maintain. But the strategy is wrong. Dissolution produces temporary relief and returns you to the same self, less resourced.",
+tu:"The real need is rest — genuine rest from the effortful project of self-maintenance. That rest is available without self-erasure. Practices that produce genuine rest (deep attention, flow states, meditation, genuine play) are not about losing the self but about temporarily releasing the effort of performing it.",
+sci:"Default Mode Network (Buckner 2008): the sense of effortful self-maintenance is associated with DMN hyperactivation. The most effective rest interventions reduce DMN activity without chemical suppression — flow states, focused attention, and genuine engagement all achieve this.",
+gm:"Identify your dissolution triggers (the moments when you reach for the escape). For one instance this week: instead of dissolving, give full attention to one specific sensory detail of your immediate environment. Hold it for 60 seconds. Notice that the self is less burdensome when attention is fully directed outward.",
+q:"Am I actually exhausted by existence — or am I exhausted by the effort of performing a self I don't fully believe in?"}
+];
+
+const cg=document.getElementById('cg');
+CD.forEach(c=>{
+cg.innerHTML+=`<div class="card" onclick="tc(this)">
+<div class="c-head">
+<div class="c-icon" style="background:${c.ibg}">${c.ico}</div>
+<div class="c-meta">
+<div class="c-num">${c.n}</div>
+<div class="c-name">${c.nm}</div>
+<div class="c-sub">${c.s}</div>
+</div>
+<div class="c-arr">▼</div>
+</div>
+<div class="c-body"><div class="c-inner">
+<div class="panel p-trap"><div class="p-lbl"><span class="pdot"></span>The distorted pattern</div><p>${c.tr}</p></div>
+<div class="panel p-truth"><div class="p-lbl"><span class="pdot"></span>The real underlying need</div><p>${c.tu}</p></div>
+<div class="panel p-sci"><div class="p-lbl"><span class="pdot"></span>Formal basis</div><p>${c.sci}</p></div>
+<div class="c-q"><div class="ql">Daily Question</div><p>${c.q}</p></div>
+<div class="panel p-game"><div class="p-lbl"><span class="pdot"></span>The practice move</div><p>${c.gm}</p></div>
+</div></div></div>`;
+});
+
+function tc(c){const o=c.classList.contains('open');document.querySelectorAll('.card.open').forEach(x=>x.classList.remove('open'));if(!o){c.classList.add('open');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'nearest'}),80);}}
+
+// SOUND ENGINE
+let AC=null,MG=null,on=false,cf=136.1,cl='Earth Resonance 136 Hz',os=[];
+function iAC(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.setValueAtTime(0,AC.currentTime);MG.connect(AC.destination);}
+function bld(f){
+const ly=[{m:1,v:.32},{m:2,v:.14},{m:3,v:.08},{m:.5,v:.10},{m:4,v:.05}];
+ly.forEach(l=>{
+const o=AC.createOscillator();const g=AC.createGain();const flt=AC.createBiquadFilter();
+o.type='sine';o.frequency.setValueAtTime(f*l.m,AC.currentTime);
+const lfo=AC.createOscillator();const lg=AC.createGain();
+lfo.frequency.setValueAtTime(.08,AC.currentTime);lg.gain.setValueAtTime(f*.002,AC.currentTime);
+lfo.connect(lg);lg.connect(o.frequency);lfo.start();
+flt.type='lowpass';flt.frequency.setValueAtTime(f*6,AC.currentTime);flt.Q.setValueAtTime(.4,AC.currentTime);
+g.gain.setValueAtTime(l.v,AC.currentTime);
+o.connect(flt);flt.connect(g);g.connect(MG);o.start();os.push({o,lfo});
+});
+const d=AC.createDelay(3);const dg=AC.createGain();
+d.delayTime.setValueAtTime(.7,AC.currentTime);dg.gain.setValueAtTime(.12,AC.currentTime);
+MG.connect(d);d.connect(dg);dg.connect(d);dg.connect(AC.destination);
+}
+function stopA(){os.forEach(({o,lfo})=>{try{o.stop();}catch(e){}try{lfo.stop();}catch(e){}});os=[];}
+function tog(){
+iAC();if(AC.state==='suspended')AC.resume();
+if(!on){bld(cf);MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setValueAtTime(0,AC.currentTime);MG.gain.linearRampToValueAtTime(.18,AC.currentTime+2.5);on=true;document.getElementById('sb').classList.add('on');document.getElementById('sl').textContent='Playing';document.getElementById('fd').classList.add('vis');document.getElementById('br').classList.add('vis');sb();}
+else{MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.linearRampToValueAtTime(0,AC.currentTime+2);setTimeout(stopA,2200);on=false;document.getElementById('sb').classList.remove('on');document.getElementById('sl').textContent='Sound';document.getElementById('fd').classList.remove('vis');document.getElementById('br').classList.remove('vis');document.getElementById('fp').classList.remove('vis');eb();}}
+function sel(el,f,l){document.querySelectorAll('.fopt').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');cf=f;cl=l;document.getElementById('fl').textContent=l;
+if(on){MG.gain.linearRampToValueAtTime(0,AC.currentTime+1.5);setTimeout(()=>{stopA();bld(f);MG.gain.cancelScheduledValues(AC.currentTime);MG.gain.setValueAtTime(0,AC.currentTime);MG.gain.linearRampToValueAtTime(.18,AC.currentTime+2);},1600);}}
+let pt;const sBtn=document.getElementById('sb');
+sBtn.addEventListener('contextmenu',e=>{e.preventDefault();document.getElementById('fp').classList.toggle('vis');});
+sBtn.addEventListener('touchstart',()=>{pt=setTimeout(()=>document.getElementById('fp').classList.toggle('vis'),600);});
+sBtn.addEventListener('touchend',()=>clearTimeout(pt));
+
+// BREATH
+let bi=null;
+function sb2(){const el=document.getElementById('bt');let p=0;const n=['IN','HOLD','OUT','REST'],t=[4000,800,4000,800];function nx(){el.textContent=n[p];bi=setTimeout(()=>{p=(p+1)%4;nx();},t[p]);}nx();}
+function sb(){sb2();}
+function eb(){if(bi)clearTimeout(bi);document.getElementById('bt').textContent='IN';}
+
+// PROGRESS
+const pb=document.getElementById('pb');
+window.addEventListener('scroll',()=>{const d=document.documentElement;pb.style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%';});
+
+// CARD ANIMATION
+const co=new IntersectionObserver(e=>{e.forEach((x,i)=>{if(x.isIntersecting)setTimeout(()=>{x.target.style.opacity='1';x.target.style.transform='translateY(0)';},i*40);});},{threshold:.04});
+document.querySelectorAll('.card').forEach(c=>{c.style.opacity='0';c.style.transform='translateY(16px)';c.style.transition='opacity .4s ease,transform .4s ease,border-color .2s';co.observe(c);});
+</script>
+</body>
+</html>
